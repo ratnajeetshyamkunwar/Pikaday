@@ -512,21 +512,18 @@
 
             if (!hasClass(target, 'is-disabled')) {
                 if (hasClass(target, 'pika-button') && !hasClass(target, 'is-empty') && !hasClass(target.parentNode, 'is-disabled')) {
-										console.log(opts);
 										if(opts.pickerType === 'single'){
 												self.setDate(new Date(target.getAttribute('data-pika-year'), target.getAttribute('data-pika-month'), target.getAttribute('data-pika-day')));
 										} else {
 												if(!self._d){
 														self.setDate(new Date(target.getAttribute('data-pika-year'), target.getAttribute('data-pika-month'), target.getAttribute('data-pika-day')));
-														console.log('111');
-												} else {
-													if (!hasClass(target.parentNode, 'is-before-start')) {
+														self._c = true;
+												} else if ( self._d && !self._e) {
 														self.setEndDate(new Date(target.getAttribute('data-pika-year'), target.getAttribute('data-pika-month'), target.getAttribute('data-pika-day')));
-														console.log('222');
-													} else {
-														console.log('333')
-														self.setDate(new Date(target.getAttribute('data-pika-year'), target.getAttribute('data-pika-month'), target.getAttribute('data-pika-day')));
-													}
+												} else if ( self._d && self._e) {
+														self._c = true;
+														self.setEndDate(null);
+														self.setDate(new Date(target.getAttribute('data-pika-year'), target.getAttribute('data-pika-month'), target.getAttribute('data-pika-day')));													
 												}
 										}
 										//condition for setting endDate 
@@ -601,6 +598,8 @@
                         self.adjustDate('add', 7);
                         break;
                     case 8:
+												self.setDate(null);
+												self.setEndDate(null);
                     case 46:
                         self.setDate(null);
                         break;
@@ -623,7 +622,6 @@
         self._onInputChange = function(e)
         {
             var date;
-
             if (e.firedBy === self) {
                 return;
             }
@@ -730,7 +728,7 @@
         }
 
         if (opts.bound) {
-            this.hide();
+            // this.hide();
             self.el.className += ' is-bound';
             addEvent(opts.trigger, 'click', self._onInputClick);
             addEvent(opts.trigger, 'focus', self._onInputFocus);
@@ -810,7 +808,7 @@
          */
         toString: function(format)
         {
-            format = format || this._o.format;
+						format = format || this._o.format;
             if (!isDate(this._d)) {
                 return '';
             }
@@ -821,8 +819,23 @@
               return moment(this._d).format(format);
             }
             return this._d.toDateString();
-        },
+				},
 
+				toEndString: function(format)
+        {
+						format = format || this._o.format;
+            if (!isDate(this._e)) {
+                return '';
+            }
+            if (this._o.toString) {
+              return this._o.toString(this._e, format);
+            }
+            if (hasMoment) {
+              return moment(this._e).format(format);
+            }
+            return this._e.toDateString();
+				},
+				
         /**
          * return a Moment.js object of the current selection (if available)
          */
@@ -847,7 +860,16 @@
         getDate: function()
         {
             return isDate(this._d) ? new Date(this._d.getTime()) : null;
+				},
+				
+				/**
+         * return a Date object of the current endDate selection
+         */
+        getEndDate: function()
+        {
+            return isDate(this._e) ? new Date(this._e.getTime()) : null;
         },
+
 
         /**
          * set the current selection
@@ -882,14 +904,15 @@
 
             this._d = new Date(date.getTime());
             setToStartOfDay(this._d);
-            this.gotoDate(this._d);
-
+						this.gotoDate(this._d);
+						
             if (this._o.field) {
-                this._o.field.value = this.toString();
+								// this._o.field.value = this.toString();
+								this._o.field.value = this.toString();
                 fireEvent(this._o.field, 'change', { firedBy: this });
             }
             if (!preventOnSelect && typeof this._o.onSelect === 'function') {
-                this._o.onSelect.call(this, this.getDate());
+                this._o.onSelect.call(this, this.getDate(), this.getEndDate());
 						}
 				},
 
@@ -926,14 +949,14 @@
 
             this._e = new Date(date.getTime());
             setToStartOfDay(this._e);
-            this.gotoDate(this._e);
+						this.gotoDate(this._e);
 
             if (this._o.field) {
-                this._o.field.value = this.toString();
+								this._o.field.value = `${this.toString()} ~ ${this.toEndString()}`;
                 fireEvent(this._o.field, 'change', { firedBy: this });
             }
             if (!preventOnSelect && typeof this._o.onSelect === 'function') {
-                this._o.onSelect.call(this, this.getDate());
+                this._o.onSelect.call(this, this.getDate(), this.getEndDate());
 						}
 				},
 
@@ -962,7 +985,7 @@
                     visibleDate = date.getTime();
                 // get the end of the month
                 lastVisibleDate.setMonth(lastVisibleDate.getMonth()+1);
-                lastVisibleDate.setDate(lastVisibleDate.getDate()-1);
+								lastVisibleDate.setDate(lastVisibleDate.getDate()-1);
                 newCalendar = (visibleDate < firstVisibleDate.getTime() || lastVisibleDate.getTime() < visibleDate);
             }
 
