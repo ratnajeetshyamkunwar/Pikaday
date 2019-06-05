@@ -201,10 +201,15 @@
         toString: null,
 
         // used to create date object from current input string
-        parse: null,
+				parse: null,
+				
+				// type of calendar ? 'range-picker' or 'single-picker'. default is single-picker
+				pickerType: 'single',
 
         // the initial date to view when first opened
-        defaultDate: null,
+				defaultDate: null,
+				defaultFromDate: null,
+				defaultToDate: null,
 
         // make the `defaultDate` the initial selected value
         setDefaultDate: false,
@@ -328,7 +333,20 @@
         if (opts.isSelected) {
             arr.push('is-selected');
             ariaSelected = 'true';
-        }
+				}
+				if (opts.isInBetween) {
+						arr.push('is-inbetween');
+				}
+				if (opts.isEndDate) {
+					arr.push('is-selected');
+					ariaSelected = 'true';
+				}
+				if (opts.isBeforeStart) {
+					arr.push('is-before-start');
+				}
+				if (opts.isAfterEnd) {
+					arr.push('is-after-end');
+				}
         if (opts.hasEvent) {
             arr.push('has-event');
         }
@@ -494,10 +512,28 @@
 
             if (!hasClass(target, 'is-disabled')) {
                 if (hasClass(target, 'pika-button') && !hasClass(target, 'is-empty') && !hasClass(target.parentNode, 'is-disabled')) {
-                    self.setDate(new Date(target.getAttribute('data-pika-year'), target.getAttribute('data-pika-month'), target.getAttribute('data-pika-day')));
+										console.log(opts);
+										if(opts.pickerType === 'single'){
+												self.setDate(new Date(target.getAttribute('data-pika-year'), target.getAttribute('data-pika-month'), target.getAttribute('data-pika-day')));
+										} else {
+												if(!self._d){
+														self.setDate(new Date(target.getAttribute('data-pika-year'), target.getAttribute('data-pika-month'), target.getAttribute('data-pika-day')));
+														console.log('111');
+												} else {
+													if (!hasClass(target.parentNode, 'is-before-start')) {
+														self.setEndDate(new Date(target.getAttribute('data-pika-year'), target.getAttribute('data-pika-month'), target.getAttribute('data-pika-day')));
+														console.log('222');
+													} else {
+														console.log('333')
+														self.setDate(new Date(target.getAttribute('data-pika-year'), target.getAttribute('data-pika-month'), target.getAttribute('data-pika-day')));
+													}
+												}
+										}
+										//condition for setting endDate 
+
                     if (opts.bound) {
                         sto(function() {
-                            self.hide();
+                            // self.hide();
                             if (opts.blurFieldOnSelect && opts.field) {
                                 opts.field.blur();
                             }
@@ -613,7 +649,7 @@
         self._onInputBlur = function()
         {
             // IE allows pika div to gain focus; catch blur the input field
-            var pEl = document.activeElement;
+						var pEl = document.activeElement;
             do {
                 if (hasClass(pEl, 'pika-single')) {
                     return;
@@ -720,8 +756,8 @@
                 this._o = extend({}, defaults, true);
             }
 
-            var opts = extend(this._o, options, true);
-
+						var opts = extend(this._o, options, true);
+						
             opts.isRTL = !!opts.isRTL;
 
             opts.field = (opts.field && opts.field.nodeName) ? opts.field : null;
@@ -730,8 +766,8 @@
 
             opts.bound = !!(opts.bound !== undefined ? opts.field && opts.bound : opts.field);
 
-            opts.trigger = (opts.trigger && opts.trigger.nodeName) ? opts.trigger : opts.field;
-
+						opts.trigger = (opts.trigger && opts.trigger.nodeName) ? opts.trigger : opts.field;
+						
             opts.disableWeekends = !!opts.disableWeekends;
 
             opts.disableDayFn = (typeof opts.disableDayFn) === 'function' ? opts.disableDayFn : null;
@@ -764,8 +800,8 @@
                 if (opts.yearRange > 100) {
                     opts.yearRange = 100;
                 }
-            }
-
+						}
+						
             return opts;
         },
 
@@ -854,8 +890,52 @@
             }
             if (!preventOnSelect && typeof this._o.onSelect === 'function') {
                 this._o.onSelect.call(this, this.getDate());
+						}
+				},
+
+				/**
+         * set the current selection
+         */
+        setEndDate: function(date, preventOnSelect)
+        {
+            if (!date) {
+                this._e = null;
+
+                if (this._o.field) {
+                    this._o.field.value = '';
+                    fireEvent(this._o.field, 'change', { firedBy: this });
+                }
+
+                return this.draw();
             }
-        },
+            if (typeof date === 'string') {
+                date = new Date(Date.parse(date));
+            }
+            if (!isDate(date)) {
+                return;
+            }
+
+            var min = this._o.minDate,
+                max = this._o.maxDate;
+
+            if (isDate(min) && date < min) {
+                date = min;
+            } else if (isDate(max) && date > max) {
+                date = max;
+            }
+
+            this._e = new Date(date.getTime());
+            setToStartOfDay(this._e);
+            this.gotoDate(this._e);
+
+            if (this._o.field) {
+                this._o.field.value = this.toString();
+                fireEvent(this._o.field, 'change', { firedBy: this });
+            }
+            if (!preventOnSelect && typeof this._o.onSelect === 'function') {
+                this._o.onSelect.call(this, this.getDate());
+						}
+				},
 
         /**
          * clear and reset the date
@@ -1162,7 +1242,11 @@
             for (var i = 0, r = 0; i < cells; i++)
             {
                 var day = new Date(year, month, 1 + (i - before)),
-                    isSelected = isDate(this._d) ? compareDates(day, this._d) : false,
+										isSelected = isDate(this._d) ? compareDates(day, this._d) : false, //compare end date also for selected day
+										isInBetween = isDate(this._e) ? day > this._d && day < this._e : false, // check if day > this._d && day > this._ed (end_date)
+										isBeforeStart = isDate(this._d) ? day < this._d : false,
+										isAfterEnd = isDate(this._e) ? day > this._e : false,
+										isEndDate = isDate(this._e) ? compareDates(day, this._e) : false,
                     isToday = compareDates(day, now),
                     hasEvent = opts.events.indexOf(day.toDateString()) !== -1 ? true : false,
                     isEmpty = i < before || i >= (days + before),
@@ -1194,7 +1278,11 @@
                         month: monthNumber,
                         year: yearNumber,
                         hasEvent: hasEvent,
-                        isSelected: isSelected,
+												isSelected: isSelected,
+												isInBetween: isInBetween,
+												isEndDate: isEndDate,
+												isBeforeStart,
+												isAfterEnd,
                         isToday: isToday,
                         isDisabled: isDisabled,
                         isEmpty: isEmpty,
