@@ -334,11 +334,15 @@
             arr.push('is-selected');
             ariaSelected = 'true';
 				}
+				if (opts.isStartDate) {
+					arr.push('is-start-date');
+					ariaSelected = 'true';
+				}
 				if (opts.isInBetween) {
 						arr.push('is-inbetween');
 				}
 				if (opts.isEndDate) {
-					arr.push('is-selected');
+					arr.push('is-selected is-end-date');
 					ariaSelected = 'true';
 				}
 				if (opts.isBeforeStart) {
@@ -733,7 +737,7 @@
         }
 
         if (opts.bound) {
-            // this.hide();
+            this.hide();
             self.el.className += ' is-bound';
             addEvent(opts.trigger, 'click', self._onInputClick);
             addEvent(opts.trigger, 'focus', self._onInputFocus);
@@ -1271,6 +1275,7 @@
             {
                 var day = new Date(year, month, 1 + (i - before)),
 										isSelected = isDate(this._d) ? compareDates(day, this._d) : false, //compare end date also for selected day
+										isStartDate = isDate(this._d) && opts.pickerType === 'range' ? compareDates(day, this._d) : false, 
 										isInBetween = isDate(this._e) ? day > this._d && day < this._e : false, // check if day > this._d && day > this._ed (end_date)
 										isBeforeStart = isDate(this._d) ? day < this._d : false,
 										isAfterEnd = isDate(this._e) ? day > this._e : false,
@@ -1288,7 +1293,6 @@
                                  (opts.maxDate && day > opts.maxDate) ||
                                  (opts.disableWeekends && isWeekend(day)) ||
                                  (opts.disableDayFn && opts.disableDayFn(day));
-
                 if (isEmpty) {
                     if (i < before) {
                         dayNumber = daysInPreviousMonth + dayNumber;
@@ -1307,6 +1311,7 @@
                         year: yearNumber,
                         hasEvent: hasEvent,
 												isSelected: isSelected,
+												isStartDate: isStartDate,
 												isInBetween: isInBetween,
 												isEndDate: isEndDate,
 												isBeforeStart,
@@ -1336,7 +1341,7 @@
                     r = 0;
                     isWeekSelected = false;
                 }
-            }
+						}
             return renderTable(opts, data, randId);
         },
 
