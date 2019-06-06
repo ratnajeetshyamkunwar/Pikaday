@@ -519,7 +519,12 @@
 														self.setDate(new Date(target.getAttribute('data-pika-year'), target.getAttribute('data-pika-month'), target.getAttribute('data-pika-day')));
 														self._c = true;
 												} else if ( self._d && !self._e) {
-														self.setEndDate(new Date(target.getAttribute('data-pika-year'), target.getAttribute('data-pika-month'), target.getAttribute('data-pika-day')));
+														if(hasClass(target.parentNode, 'is-before-start')){
+															self._c = true;
+															self.setDate(new Date(target.getAttribute('data-pika-year'), target.getAttribute('data-pika-month'), target.getAttribute('data-pika-day')));
+														} else {
+															self.setEndDate(new Date(target.getAttribute('data-pika-year'), target.getAttribute('data-pika-month'), target.getAttribute('data-pika-day')));
+														}
 												} else if ( self._d && self._e) {
 														self._c = true;
 														self.setEndDate(null);
