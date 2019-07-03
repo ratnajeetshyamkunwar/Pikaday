@@ -8,12 +8,12 @@
     "date"
   ],
   "homepage": "https://pikaday.com",
-  "bugs": "https://github.com/Pikaday/Pikaday/issues",
+  "bugs": "https://github.com/ratnajeetshyamkunwar/Pikaday/issues",
   "license": "(0BSD OR MIT)",
   "main": "pikaday.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Pikaday/Pikaday.git"
+    "url": "https://github.com/ratnajeetshyamkunwar/Pikaday.git"
   },
   "devDependencies": {
     "expect.js": "^0.3.1",
