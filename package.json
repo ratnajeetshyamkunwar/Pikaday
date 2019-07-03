@@ -1,5 +1,5 @@
 {
-  "name": "pikaday",
+  "name": "@ratnajeetshyamkunwar/pikaday",
   "version": "1.8.0",
   "description": "A refreshing JavaScript Datepicker — lightweight, no dependencies, modular CSS",
   "keywords": [
